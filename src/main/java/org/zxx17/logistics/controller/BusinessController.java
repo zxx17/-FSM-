@@ -1,23 +1,34 @@
 package org.zxx17.logistics.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.zxx17.logistics.common.result.Result;
+import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.service.BusinessService;
 
 /**
  * 业务应用接口.
  *
  * @author Xinxuan Zhuo
  * @version 1.0.0
- * @date 2024/6/11
+ * @since 2024/6/11
  */
 @RestController
 @RequestMapping("/api/app")
 @AllArgsConstructor
 public class BusinessController {
 
+  private final BusinessService businessService;
+
   /**
    * 创建业务应用
    */
+  @PostMapping("/create")
+  public Result<Long> createBusinessApp(@RequestBody CreateBusinessAppRequest request) {
+    return businessService.createBusinessApp(request);
+  }
 
 }

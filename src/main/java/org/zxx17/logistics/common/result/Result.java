@@ -18,7 +18,7 @@ public class Result<T> {
   private T data;
 
   @Getter
-  static class State {
+  private static class State {
 
     private final int code;
     private final String msg;
@@ -37,7 +37,7 @@ public class Result<T> {
     return result;
   }
 
-  public static <T> Result<T> response(T data, ResultEnum resultEnum,String message) {
+  public static <T> Result<T> response(T data, ResultEnum resultEnum, String message) {
     Result<T> result = new Result<>();
     result.state = new State(resultEnum.getCode(), message);
     result.setData(data);
