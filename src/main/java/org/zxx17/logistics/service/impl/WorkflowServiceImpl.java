@@ -34,7 +34,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public Result<?> createWorkflow(WorkflowCreateRequest request) {
     List<WorkflowEventsDto> events = request.getEvents();
-    // TODO出现fromState-->toState不合理时直接返回
+    // TODO 出现fromState-->toState不合理时直接返回 分两类
     for (WorkflowEventsDto event : events) {
       LogisticsStatusEnum fromState = LogisticsStatusEnum.valueOf(event.getFromState());
       LogisticsStatusEnum toState = LogisticsStatusEnum.valueOf(event.getToState());
@@ -49,6 +49,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         );
       }
     }
+
 
     return workflowManager.createWorkflow(request);
   }

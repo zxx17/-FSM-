@@ -30,6 +30,7 @@ public class BusinessServiceImpl implements BusinessService {
   @Override
   public Result<CommonResponse> createBusinessApp(BusinessAppCreateRequest request) {
     List<StatesDto> states = request.getStates();
+    // TODO 这里分两类
     String beginState = request.getBeginState();
     String endState = request.getEndState();
     // 校验状态数量
