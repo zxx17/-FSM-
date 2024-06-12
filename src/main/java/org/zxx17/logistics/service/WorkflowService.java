@@ -1,7 +1,7 @@
 package org.zxx17.logistics.service;
 
 import org.zxx17.logistics.common.result.Result;
-import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.controller.request.CreateWorkflowRequest;
 import org.zxx17.logistics.controller.response.CommonResponse;
 
 /**
@@ -11,7 +11,7 @@ import org.zxx17.logistics.controller.response.CommonResponse;
  * @version 1.0.0
  * @since 2024/6/12
  */
-public interface BusinessService {
+public interface WorkflowService {
 
-  Result<CommonResponse> createBusinessApp(CreateBusinessAppRequest request);
+  Result<?> createWorkflow(CreateWorkflowRequest request);
 }

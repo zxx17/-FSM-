@@ -30,6 +30,9 @@ public class Result<T> {
 
   }
 
+  /**
+   * 响应结果.
+   */
   public static <T> Result<T> response(String message, ResultEnum resultEnum) {
     Result<T> result = new Result<>();
     result.state = new State(resultEnum.getCode(), message);
@@ -37,7 +40,10 @@ public class Result<T> {
     return result;
   }
 
-  public static <T> Result<T> response(T data, ResultEnum resultEnum, String message) {
+  /**
+   * 响应结果.
+   */
+  public static <T> Result<T> response(T data, String message, ResultEnum resultEnum) {
     Result<T> result = new Result<>();
     result.state = new State(resultEnum.getCode(), message);
     result.setData(data);

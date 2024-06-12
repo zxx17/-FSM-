@@ -14,7 +14,7 @@ public enum LogisticsStatusEnum {
   PAID("已支付"),
   TRANSITING("运输中"),
   DELIVERY("派送中"),
-  DELIVERID("已签收"),
+  DELIVERED("已签收"),
   REFUSED("已拒收"),
   EXCEPTION("异常件"),
   CANCELLED("已取消"),

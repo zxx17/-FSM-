@@ -29,6 +29,9 @@ public class PageResult<T> implements Serializable {
 
   private Integer end = 0;
 
+  /**
+   * 获取记录.
+   */
   public void setRecords(List<T> content) {
     this.content = content;
     if (content != null && content.size() > 0) {
@@ -36,6 +39,9 @@ public class PageResult<T> implements Serializable {
     }
   }
 
+  /**
+   * 设置总数.
+   */
   public void setTotal(Integer total) {
     this.total = total;
     if (this.pageSize > 0) {

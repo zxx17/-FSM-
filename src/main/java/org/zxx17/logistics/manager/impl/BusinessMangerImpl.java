@@ -2,51 +2,44 @@ package org.zxx17.logistics.manager.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.zxx17.logistics.common.enums.ResultEnum;
 import org.zxx17.logistics.common.result.Result;
 import org.zxx17.logistics.common.util.id.SnowFlake;
 import org.zxx17.logistics.common.util.id.SnowFlakeFactory;
+import org.zxx17.logistics.container.ApplicationContainer;
+import org.zxx17.logistics.container.RoleAuthsContainer;
+import org.zxx17.logistics.container.RolesContainer;
+import org.zxx17.logistics.container.StatesContainer;
 import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
-import org.zxx17.logistics.domain.dto.RolesDTO;
+import org.zxx17.logistics.controller.response.CommonResponse;
 import org.zxx17.logistics.domain.entity.Applications;
 import org.zxx17.logistics.domain.entity.RoleAuths;
 import org.zxx17.logistics.domain.entity.Roles;
 import org.zxx17.logistics.domain.entity.States;
 import org.zxx17.logistics.manager.BusinessManger;
-import org.zxx17.logistics.mapper.ApplicationsMapper;
-import org.zxx17.logistics.mapper.RoleAuthsMapper;
-import org.zxx17.logistics.mapper.RolesMapper;
-import org.zxx17.logistics.mapper.StatesMapper;
-import org.zxx17.logistics.mapper.WorkflowStatesMapper;
 
 /**
+ * .
+ *
  * @author Xinxuan Zhuo
  * @version 1.0.0
- * @since 2024/6/11
+ * @since 2024/6/12
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BusinessMangerImpl implements BusinessManger {
 
-  private final ApplicationsMapper applicationsMapper;
-
-  private final RolesMapper rolesMapper;
-
-  private final RoleAuthsMapper roleAuthsMapper;
-
-  private final StatesMapper statesMapper;
-
+  private final ApplicationContainer applicationContainer;
+  private final RoleAuthsContainer roleAuthsContainer;
+  private final RolesContainer rolesContainer;
+  private final StatesContainer statesContainer;
 
   @Override
-  @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
-  public Result<Long> handleCreateBusinessApp(CreateBusinessAppRequest request) {
+  public Result<CommonResponse> handleCreateBusinessApp(CreateBusinessAppRequest request) {
     SnowFlake snowFlake = SnowFlakeFactory.getSnowFlake();
     Long bizAppId = snowFlake.nextId();
     String beginStateCode = request.getBeginState();
@@ -59,7 +52,7 @@ public class BusinessMangerImpl implements BusinessManger {
     applications.setDescription(bizAppDesc);
     applications.setStartState(beginStateCode);
     applications.setEndState(endStateCode);
-    int row = applicationsMapper.createApp(applications);
+    boolean flag = applicationContainer.addApplication(applications);
 
     List<States> stateList = new ArrayList<>();
     request.getStates().forEach(statesDTO -> {
@@ -71,7 +64,7 @@ public class BusinessMangerImpl implements BusinessManger {
       states.setApplicationId(bizAppId);
       stateList.add(states);
     });
-    int row2 = statesMapper.insertAppStates(stateList);
+    statesContainer.addStates(stateList);
 
     List<Roles> rolesList = new ArrayList<>();
     List<RoleAuths> roleAuthsList = new ArrayList<>();
@@ -92,10 +85,12 @@ public class BusinessMangerImpl implements BusinessManger {
         roleAuthsList.add(roleAuth);
       });
     });
-    int row3 = rolesMapper.insertAppRoles(rolesList);
-    int row4 = roleAuthsMapper.insertAppRoleAuths(roleAuthsList);
+    rolesContainer.addRoles(rolesList);
+    roleAuthsContainer.addRoleAuths(roleAuthsList);
 
-    return Result.response(bizAppId, ResultEnum.SUCCESS, "流程创建成功");
+    CommonResponse commonResponse = new CommonResponse();
+    commonResponse.setId(bizAppId);
+    return Result.response(commonResponse, "流程创建成功", ResultEnum.SUCCESS);
   }
 
 

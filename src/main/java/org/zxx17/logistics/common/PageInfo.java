@@ -17,6 +17,9 @@ public class PageInfo implements Serializable {
 
   private Integer size = 10;
 
+  /**
+   * 获取页码.
+   */
   public Integer getPage() {
     if (page == null || page < 1) {
       return 1;
@@ -24,6 +27,9 @@ public class PageInfo implements Serializable {
     return page;
   }
 
+  /**
+   * 获取页大小.
+   */
   public Integer getSize() {
     if (size == null || size < 1 || size > Integer.MAX_VALUE) {
       return 10;

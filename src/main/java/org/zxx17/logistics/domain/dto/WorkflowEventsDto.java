@@ -7,11 +7,14 @@ import lombok.Data;
  *
  * @author Xinxuan Zhuo
  * @version 1.0.0
- * @date 2024/6/11
+ * @since 2024/6/12
  */
 @Data
-public class RoleAuthDTO {
-
+public class WorkflowEventsDto {
+  /**
+   * 事件名称.
+   */
+  private String name;
   /**
    * 起始状态编码.
    */
@@ -20,5 +23,8 @@ public class RoleAuthDTO {
    * 目标状态编码.
    */
   private String toState;
-
+  /**
+   * 执行角色.
+   */
+  private String role;
 }

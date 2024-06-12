@@ -1,12 +1,14 @@
 package org.zxx17.logistics.controller;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.zxx17.logistics.common.result.Result;
 import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.controller.response.CommonResponse;
 import org.zxx17.logistics.service.BusinessService;
 
 /**
@@ -18,16 +20,17 @@ import org.zxx17.logistics.service.BusinessService;
  */
 @RestController
 @RequestMapping("/api/app")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class BusinessController {
 
   private final BusinessService businessService;
 
   /**
-   * 创建业务应用
+   * 创建业务应用.
    */
   @PostMapping("/create")
-  public Result<Long> createBusinessApp(@RequestBody CreateBusinessAppRequest request) {
+  public Result<CommonResponse> createBusinessApp(
+      @RequestBody CreateBusinessAppRequest request) {
     return businessService.createBusinessApp(request);
   }
 
