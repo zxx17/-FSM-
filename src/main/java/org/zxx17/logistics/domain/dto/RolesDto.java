@@ -11,7 +11,7 @@ import lombok.Data;
  * @since 2024/6/11
  */
 @Data
-public class RolesDTO {
+public class RolesDto {
 
   /**
    * 角色名称.
@@ -21,5 +21,5 @@ public class RolesDTO {
   /**
    * 角色权限列表.
    */
-  private List<RoleAuthDTO> auth;
+  private List<RoleAuthDto> auth;
 }

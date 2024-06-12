@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.zxx17.logistics.common.result.Result;
-import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.controller.request.BusinessAppCreateRequest;
 import org.zxx17.logistics.controller.response.CommonResponse;
 import org.zxx17.logistics.service.BusinessService;
 
@@ -30,7 +30,7 @@ public class BusinessController {
    */
   @PostMapping("/create")
   public Result<CommonResponse> createBusinessApp(
-      @RequestBody CreateBusinessAppRequest request) {
+      @RequestBody BusinessAppCreateRequest request) {
     return businessService.createBusinessApp(request);
   }
 

@@ -23,12 +23,11 @@ public class ApplicationContainer {
   /**
    * 添加应用 .
    */
-  public boolean addApplication(Applications applications) {
+  public void addApplication(Applications applications) {
     if (applicationsMap.containsKey(applications.getId())) {
-      return false;
+      return;
     }
     applicationsMap.put(applications.getId(), applications);
-    return true;
   }
 
 

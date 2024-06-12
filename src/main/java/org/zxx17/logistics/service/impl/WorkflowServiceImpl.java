@@ -3,13 +3,15 @@ package org.zxx17.logistics.service.impl;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.zxx17.logistics.common.enums.LogisticsStatusEnum;
 import org.zxx17.logistics.common.enums.ResultEnum;
 import org.zxx17.logistics.common.result.Result;
-import org.zxx17.logistics.controller.request.CreateWorkflowRequest;
-import org.zxx17.logistics.controller.response.CommonResponse;
+import org.zxx17.logistics.controller.request.WorkflowActionRequest;
+import org.zxx17.logistics.controller.request.WorkflowCreateRequest;
+import org.zxx17.logistics.controller.request.WorkflowDeleteRequest;
+import org.zxx17.logistics.controller.request.WorkflowPageQueryRequest;
+import org.zxx17.logistics.controller.request.WorkflowUpdateRequest;
 import org.zxx17.logistics.controller.response.ErrorResponse;
 import org.zxx17.logistics.domain.dto.WorkflowEventsDto;
 import org.zxx17.logistics.manager.WorkflowManager;
@@ -30,7 +32,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private final WorkflowManager workflowManager;
 
   @Override
-  public Result<?> createWorkflow(CreateWorkflowRequest request) {
+  public Result<?> createWorkflow(WorkflowCreateRequest request) {
     List<WorkflowEventsDto> events = request.getEvents();
     // TODO出现fromState-->toState不合理时直接返回
     for (WorkflowEventsDto event : events) {
@@ -40,14 +42,65 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (!isValidTransition(fromState, toState)) {
         ErrorResponse response = new ErrorResponse();
         response.setReason(ResultEnum.ILLEGAL_STATE_TRANSITION.getMessage());
+        log.warn("Invalid state transition: " + fromState + " --> " + toState);
         return Result.response(response,
-            "Invalid state transition: " + fromState + " --> " + toState,
+            "创建失败",
             ResultEnum.ILLEGAL_STATE_TRANSITION
         );
       }
     }
 
     return workflowManager.createWorkflow(request);
+  }
+
+
+  @Override
+  public Result<?> queryWorkflowList(WorkflowPageQueryRequest request) {
+    return workflowManager.queryWorkflowList(request);
+  }
+
+  @Override
+  public Result<?> action(WorkflowActionRequest request) {
+    Long workflowId = request.getId();
+    String action = request.getAction();
+    String role = request.getRole();
+    log.info(">>>>>FSM状态机工作流程状态流转: workflowId={}, action={}, role={}",
+        workflowId, action,
+        role);
+    int flag = workflowManager.sendEvent(workflowId, action, role);
+    if (flag == 1) {
+      return Result.response(null, "操作成功", ResultEnum.SUCCESS);
+    }
+    // TODO
+    return null;
+  }
+
+  @Override
+  public Result<?> delete(WorkflowDeleteRequest request) {
+    Long workflowId = request.getId();
+    return workflowManager.deleteWorkflowById(workflowId);
+  }
+
+  @Override
+  public Result<?> updateWorkflow(WorkflowUpdateRequest request) {
+    List<WorkflowEventsDto> events = request.getEvents();
+    // TODO出现fromState-->toState不合理时直接返回
+    for (WorkflowEventsDto event : events) {
+      LogisticsStatusEnum fromState = LogisticsStatusEnum.valueOf(event.getFromState());
+      LogisticsStatusEnum toState = LogisticsStatusEnum.valueOf(event.getToState());
+
+      if (!isValidTransition(fromState, toState)) {
+        ErrorResponse response = new ErrorResponse();
+        response.setReason(ResultEnum.ILLEGAL_STATE_TRANSITION.getMessage());
+        log.warn("Invalid state transition: " + fromState + " --> " + toState);
+        return Result.response(response,
+            "更新失败",
+            ResultEnum.ILLEGAL_STATE_TRANSITION
+        );
+      }
+    }
+
+    return workflowManager.updateWorkflow(request);
   }
 
   private boolean isValidTransition(LogisticsStatusEnum fromState, LogisticsStatusEnum toState) {

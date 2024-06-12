@@ -1,9 +1,11 @@
 package org.zxx17.logistics.container;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import org.zxx17.logistics.domain.dto.StatesDto;
 import org.zxx17.logistics.domain.entity.WorkflowStates;
 
 /**
@@ -21,5 +23,26 @@ public class WorkflowStatesContainer {
 
   public void addStates(List<WorkflowStates> workflowStates) {
     workflowStates.forEach(states -> statesMap.put(states.getId(), states));
+  }
+
+  public void bachDeleteByWorkflowId(Long workflowId) {
+    statesMap.entrySet().removeIf(
+        entry -> entry.getValue().getWorkflowId().equals(workflowId));
+  }
+
+
+  /**
+   * 批量更新工作流状态.
+   */
+  public void bachUpdateByWorkflowId(Long workflowId, List<StatesDto> states) {
+    statesMap.values().stream()
+        .filter(state -> state.getWorkflowId().equals(workflowId))
+        .forEach(state -> {
+          states.forEach(statesDto -> {
+            state.setStateCode(statesDto.getCode());
+            state.setStateName(statesDto.getName());
+            state.setUpdatedTime(new Date());
+          });
+        });
   }
 }

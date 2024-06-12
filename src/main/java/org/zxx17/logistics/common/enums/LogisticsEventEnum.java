@@ -15,13 +15,10 @@ public enum LogisticsEventEnum {
   AUTO("自动执行"),
   DELIVERY("派送");
 
-  private String description;
+  private final String description;
 
   LogisticsEventEnum(String description) {
     this.description = description;
   }
 
-  public String getDescription() {
-    return description;
-  }
 }

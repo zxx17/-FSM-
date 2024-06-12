@@ -1,7 +1,7 @@
 package org.zxx17.logistics.manager;
 
 import org.zxx17.logistics.common.result.Result;
-import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.controller.request.BusinessAppCreateRequest;
 import org.zxx17.logistics.controller.response.CommonResponse;
 
 /**
@@ -12,5 +12,5 @@ import org.zxx17.logistics.controller.response.CommonResponse;
  */
 public interface BusinessManger {
 
-  Result<CommonResponse> handleCreateBusinessApp(CreateBusinessAppRequest request);
+  Result<CommonResponse> handleCreateBusinessApp(BusinessAppCreateRequest request);
 }

@@ -10,7 +10,7 @@ import lombok.Data;
  * @date 2024/6/11
  */
 @Data
-public class RoleAuthDTO {
+public class RoleAuthDto {
 
   /**
    * 起始状态编码.

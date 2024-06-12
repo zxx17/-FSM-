@@ -13,7 +13,7 @@ import org.zxx17.logistics.container.ApplicationContainer;
 import org.zxx17.logistics.container.RoleAuthsContainer;
 import org.zxx17.logistics.container.RolesContainer;
 import org.zxx17.logistics.container.StatesContainer;
-import org.zxx17.logistics.controller.request.CreateBusinessAppRequest;
+import org.zxx17.logistics.controller.request.BusinessAppCreateRequest;
 import org.zxx17.logistics.controller.response.CommonResponse;
 import org.zxx17.logistics.domain.entity.Applications;
 import org.zxx17.logistics.domain.entity.RoleAuths;
@@ -39,7 +39,7 @@ public class BusinessMangerImpl implements BusinessManger {
   private final StatesContainer statesContainer;
 
   @Override
-  public Result<CommonResponse> handleCreateBusinessApp(CreateBusinessAppRequest request) {
+  public Result<CommonResponse> handleCreateBusinessApp(BusinessAppCreateRequest request) {
     SnowFlake snowFlake = SnowFlakeFactory.getSnowFlake();
     Long bizAppId = snowFlake.nextId();
     String beginStateCode = request.getBeginState();
@@ -52,7 +52,7 @@ public class BusinessMangerImpl implements BusinessManger {
     applications.setDescription(bizAppDesc);
     applications.setStartState(beginStateCode);
     applications.setEndState(endStateCode);
-    boolean flag = applicationContainer.addApplication(applications);
+    applicationContainer.addApplication(applications);
 
     List<States> stateList = new ArrayList<>();
     request.getStates().forEach(statesDTO -> {

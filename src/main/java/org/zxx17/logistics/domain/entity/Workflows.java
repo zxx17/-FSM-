@@ -27,6 +27,10 @@ public class Workflows implements Serializable {
    */
   private String name;
   /**
+   * 创建者.
+   */
+  private String creator;
+  /**
    * 流程描述.
    */
   private String description;
