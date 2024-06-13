@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 角色权限表(RoleAuths)实体类.
  *
- * @author makejava
+ * @author Xinxuan Zhuo
  * @since 2024-06-11 20:29:28
  */
 @Data

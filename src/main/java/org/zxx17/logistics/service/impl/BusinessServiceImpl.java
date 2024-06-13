@@ -1,12 +1,12 @@
 package org.zxx17.logistics.service.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.zxx17.logistics.common.enums.LogisticsBizAppStatesEnum;
 import org.zxx17.logistics.common.enums.LogisticsStatusEnum;
 import org.zxx17.logistics.common.enums.ResultEnum;
 import org.zxx17.logistics.common.enums.RoleEnum;
@@ -41,41 +41,144 @@ public class BusinessServiceImpl implements BusinessService {
     String endState = request.getEndState();
     // 1.1校验状态数量
     if (states.size() < 3) {
+      log.error("创建业务应用失败，状态总数不能少于 3 个");
       return Result.response("创建业务应用失败", ResultEnum.TOO_FEW_STATES);
     }
     // 1.2开始和结束状态合法性
     boolean illegalState = checkErrorStartStateToEndState(beginState, endState, states);
     if (illegalState) {
+      log.error("创建业务应用失败，开始状态或结束状态不合理");
       return Result.response("创建业务应用失败", ResultEnum.INVALID_START_OR_END_STATE);
     }
-    // 2.TODO 校验角色 主要是校验角色开始状态和结束状态是否非法，一致非法，反向非法
+    // 2.校验角色 主要是校验角色开始状态和结束状态是否非法，一致非法，反向非法
+    boolean illegalRoleState =
+        checkRolesErrorStartStateToEndState(request.getRoles(), states.size());
+    if (illegalRoleState) {
+      log.error("创建业务应用失败，角色开始状态或结束状态不合理");
+      return Result.response("创建业务应用失败", ResultEnum.UNREASONABLE_USER_ROLE_PERMISSION);
+    }
 
     // 创建业务应用
     return businessManger.handleCreateBusinessApp(request);
   }
 
-  private boolean checkRolesErrorStartStateToEndState(List<RolesDto> rolesDtos) {
+  private boolean checkRolesErrorStartStateToEndState(List<RolesDto> rolesDtos, int stateSize) {
+    boolean isCheckEnum = false;
+    String fromState = rolesDtos.get(0).getAuth().get(0).getFromState();
+    for (LogisticsStatusEnum logisticsStatusEnum : LogisticsStatusEnum.values()) {
+      if (logisticsStatusEnum.name().equals(fromState)) {
+        isCheckEnum = true;
+        break;
+      }
+    }
+    // 封装map
     Map<String, List<RoleAuthDto>> roleAndAuths = new HashMap<>();
     for (RolesDto rolesDto : rolesDtos) {
       String roleName = rolesDto.getRole();
       List<RoleAuthDto> roleAuth = rolesDto.getAuth();
       roleAndAuths.put(roleName, roleAuth);
     }
-
-    // 对每个roleName的roleAuth进行checkErrorStartStateToEndState，返回true停止
-    for (Map.Entry<String, List<RoleAuthDto>> entry : roleAndAuths.entrySet()) {
-      List<RoleAuthDto> roleAuth = entry.getValue();
-      for (RoleAuthDto roleAuthDto : roleAuth) {
-        String fromStateStr = roleAuthDto.getFromState();
-        String toStateStr = roleAuthDto.getToState();
-        int startFlag = Integer.parseInt(fromStateStr.substring(fromStateStr.lastIndexOf("_") + 1));
-        int endStateFlag = Integer.parseInt(toStateStr.substring(toStateStr.lastIndexOf("_") + 1));
-        if (startFlag >= endStateFlag) {
-          return true;
+    if (!isCheckEnum) {
+      // 1.对于S类的状态，
+      // 对每个roleName的roleAuth进行checkErrorStartStateToEndState，返回true停止
+      for (Map.Entry<String, List<RoleAuthDto>> entry : roleAndAuths.entrySet()) {
+        List<RoleAuthDto> roleAuth = entry.getValue();
+        for (RoleAuthDto roleAuthDto : roleAuth) {
+          String fromStateStr = roleAuthDto.getFromState();
+          String toStateStr = roleAuthDto.getToState();
+          int startFlag = Integer.parseInt(
+              fromStateStr.substring(fromStateStr.lastIndexOf("_") + 1));
+          int endStateFlag = Integer.parseInt(
+              toStateStr.substring(toStateStr.lastIndexOf("_") + 1));
+          if (
+              startFlag >= endStateFlag
+          ) {
+            if (stateSize == 3 && fromStateStr.equals(LogisticsBizAppStatesEnum.BEGIN.getCode())) {
+              // 说明中转只存在一轮
+              return true;
+            }
+            if (stateSize > 3 && !fromStateStr.equals(LogisticsBizAppStatesEnum.END.getCode())) {
+              return false;
+            }
+            log.error("role====>{}开始状态和结束状态不非法checking！！！！！！！！！！！！！！{}---->{}",
+                entry.getKey(), fromStateStr, toStateStr);
+            return true;
+          }
         }
       }
+    } else {
+      // 2.对于枚举类的状态
+      for (Map.Entry<String, List<RoleAuthDto>> entry : roleAndAuths.entrySet()) {
+        List<RoleAuthDto> roleAuth = entry.getValue();
+        for (RoleAuthDto roleAuthDto : roleAuth) {
+          String fromStateStr = roleAuthDto.getFromState();
+          String toStateStr = roleAuthDto.getToState();
+          boolean rightStateTrans = isValidTransition(
+              LogisticsStatusEnum.valueOf(fromStateStr),
+              LogisticsStatusEnum.valueOf(toStateStr),
+              RoleEnum.valueOf(entry.getKey())
+          );
+          if (!rightStateTrans) {
+            log.error("role====>{}开始状态和结束状态不非法checking2222！！！！！！！！！！！！！！{}---->{}",
+                entry.getKey(), fromStateStr, toStateStr);
+            return true;
+          }
+        }
+      }
+
     }
+
     return false;
+  }
+
+
+  /**
+   * 判断角色开始状态和结束状态是否非法.
+   */
+  public static boolean isValidTransition(LogisticsStatusEnum fromState,
+      LogisticsStatusEnum toState,
+      RoleEnum role) {
+    switch (role) {
+      case POSTMAN:
+        return
+            (fromState == LogisticsStatusEnum.PENDING && toState == LogisticsStatusEnum.COLLECTED)
+                || (fromState == LogisticsStatusEnum.TRANSITING
+                && toState == LogisticsStatusEnum.DELIVERY)
+                || (fromState == LogisticsStatusEnum.DELIVERY
+                && toState == LogisticsStatusEnum.EXCEPTION);
+
+      case SENDER:
+        return (fromState == LogisticsStatusEnum.PAYING && toState == LogisticsStatusEnum.PAID)
+            || (fromState == LogisticsStatusEnum.PENDING
+            && toState == LogisticsStatusEnum.CANCELLED)
+            || (fromState == LogisticsStatusEnum.PAYING
+            && toState == LogisticsStatusEnum.CANCELLED);
+
+      case TRANSITER:
+      case DRIVER:
+        return (fromState == LogisticsStatusEnum.PAID && toState == LogisticsStatusEnum.TRANSITING);
+
+      case RECIPIENT:
+        return
+            (fromState == LogisticsStatusEnum.DELIVERY && toState == LogisticsStatusEnum.DELIVERED)
+                || (fromState == LogisticsStatusEnum.DELIVERY
+                && toState == LogisticsStatusEnum.REFUSED);
+
+      case AUTO:
+        return
+            (fromState == LogisticsStatusEnum.DELIVERED && toState == LogisticsStatusEnum.COMPLETED)
+                || (fromState == LogisticsStatusEnum.CANCELLED
+                && toState == LogisticsStatusEnum.COMPLETED)
+                || (fromState == LogisticsStatusEnum.REFUSED
+                && toState == LogisticsStatusEnum.COMPLETED)
+                || (fromState == LogisticsStatusEnum.EXCEPTION
+                && toState == LogisticsStatusEnum.COMPLETED)
+                || (fromState == LogisticsStatusEnum.COLLECTED
+                && toState == LogisticsStatusEnum.PAYING);
+
+      default:
+        return false;
+    }
   }
 
 
@@ -89,7 +192,7 @@ public class BusinessServiceImpl implements BusinessService {
             LogisticsStatusEnum.valueOf(endState));
       }
     }
-    // check2（TODO 改成enum）
+    // check2（待改成enum）
     String maxState = states.get(states.size() - 1).getCode();
     int startFlag = Integer.parseInt(beginState.substring(beginState.lastIndexOf("_") + 1));
     int endStateFlag = Integer.parseInt(endState.substring(endState.lastIndexOf("_") + 1));
@@ -100,7 +203,7 @@ public class BusinessServiceImpl implements BusinessService {
 
   private boolean validBeginAndEndTransition(LogisticsStatusEnum fromState,
       LogisticsStatusEnum toState) {
-    // TODO 需要更严谨的考虑实现，这里为了过测试用例
+    // 待补充
     if (fromState.equals(LogisticsStatusEnum.PENDING)) {
       return toState.equals(LogisticsStatusEnum.COMPLETED);
     }

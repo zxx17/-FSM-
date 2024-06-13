@@ -31,7 +31,7 @@ public class LogisticsStateMachineListener {
     // 获取workflowId
     Long workflowId = (Long) messageIn.getHeaders().get("workflowId");
     log.info("COLLECT待揽收--->揽收.{}===================", workflowId);
-    // 更新对应workflow实例状态
+    // 更新对应workflow实例状态 相当于入库操作 .....
   }
 
   /**
@@ -43,7 +43,7 @@ public class LogisticsStateMachineListener {
     // 获取workflowId
     Long workflowId = (Long) messageIn.getHeaders().get("workflowId");
     log.info("AUTO揽收--->待支付.{}===================", workflowId);
-    // 更新对应workflow实例状态 相当于入库操作
+    // 更新对应workflow实例状态 相当于入库操作 .....
 
   }
 
@@ -55,8 +55,9 @@ public class LogisticsStateMachineListener {
   public void pay(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("已支付--->运输中===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("PAY待支付--->已支付.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -67,8 +68,9 @@ public class LogisticsStateMachineListener {
   public void cancel(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("待支付 -->已取消===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("待支付 --> 已取消.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -79,8 +81,9 @@ public class LogisticsStateMachineListener {
   public void cancelToCompleted(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("已取消(取消支付) -->已完成===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("AUTO已取消 --> 已完成.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
 
@@ -92,8 +95,9 @@ public class LogisticsStateMachineListener {
   public void transit(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("已支付--->运输中===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("SHIP已支付--->运输中.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
 
@@ -105,8 +109,9 @@ public class LogisticsStateMachineListener {
   public void deliver(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("运输中--->派送中===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("DELIVERY运输中--->派送中.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -117,8 +122,9 @@ public class LogisticsStateMachineListener {
   public void delivered(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("派送中--->已签收===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("DELIVERY派送中--->已签收.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -129,8 +135,9 @@ public class LogisticsStateMachineListener {
   public void refused(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("派送中--->已拒收===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("DELIVERY派送中--->已拒收.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -141,8 +148,9 @@ public class LogisticsStateMachineListener {
   public void exception(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("派送中--->异常件===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("DELIVERY派送中--->异常件.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -153,8 +161,9 @@ public class LogisticsStateMachineListener {
   public void exceptionToCompleted(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("异常件--->已完成===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info(" AUTO 异常件--->已完成.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -165,8 +174,9 @@ public class LogisticsStateMachineListener {
   public void deliveredToCompleted(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("已签收--->已完成===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("AUTO 已签收--->已完成.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
   /**
@@ -177,8 +187,9 @@ public class LogisticsStateMachineListener {
   public void refusedToCompleted(Message<LogisticsEventEnum> message) {
     // 获取workflowId
     Long workflowId = (Long) message.getHeaders().get("workflowId");
-    System.out.println("已拒收--->已完成===================");
-    // 更新对应workflow实例状态 相当于入库操作
+    log.info("AUTO 已拒收--->已完成.{}===================", workflowId);
+    // 更新对应workflow实例状态 相当于入库操作 .....
+
   }
 
 

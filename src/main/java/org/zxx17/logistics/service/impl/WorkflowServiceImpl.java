@@ -164,7 +164,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public Result<?> updateWorkflow(WorkflowUpdateRequest request) {
     List<WorkflowEventsDto> events = request.getEvents();
-    // TODO出现fromState-->toState不合理时直接返回
+    // 出现fromState-->toState不合理时直接返回
     for (WorkflowEventsDto event : events) {
       LogisticsStatusEnum fromState = LogisticsStatusEnum.valueOf(event.getFromState());
       LogisticsStatusEnum toState = LogisticsStatusEnum.valueOf(event.getToState());
@@ -172,7 +172,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (!isValidTransition(fromState, toState)) {
         ErrorResponse response = new ErrorResponse();
         response.setReason(ResultEnum.ILLEGAL_STATE_TRANSITION.getMessage());
-        log.warn("Invalid state transition: " + fromState + " --> " + toState);
+        log.warn("非法的状态流转: " + fromState + " --> " + toState);
         return Result.response(response,
             "更新失败",
             ResultEnum.ILLEGAL_STATE_TRANSITION

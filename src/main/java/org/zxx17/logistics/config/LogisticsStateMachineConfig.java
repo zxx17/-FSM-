@@ -178,7 +178,7 @@ public class LogisticsStateMachineConfig
    * @return 状态机监听器实例
    */
   @Bean
-  public StateMachineListener<LogisticsStatusEnum, LogisticsEventEnum>  listener() {
+  public StateMachineListener<LogisticsStatusEnum, LogisticsEventEnum> listener() {
     return new StateMachineListenerAdapter<LogisticsStatusEnum, LogisticsEventEnum>() {
       /**
        * 状态改变时触发的方法，打印状态变更信息.
@@ -191,21 +191,9 @@ public class LogisticsStateMachineConfig
           State<LogisticsStatusEnum, LogisticsEventEnum> from,
           State<LogisticsStatusEnum, LogisticsEventEnum> to
       ) {
-        System.out.println(">>>>状态机状态改变>>>>>" + to.getId());
+        log.info(">>>>状态机状态改变（初始化为PENDING）>>>>>{}", to.getId());
       }
 
-      @Override
-      public void stateMachineStarted(
-          StateMachine<LogisticsStatusEnum, LogisticsEventEnum> stateMachine) {
-        log.info(">>>>>物流状态机已启动");
-      }
-
-      @Override
-      public void stateMachineStopped(
-          StateMachine<LogisticsStatusEnum, LogisticsEventEnum> stateMachine) {
-        log.info("<<<<<<物流状态机已停止");
-
-      }
     };
   }
 

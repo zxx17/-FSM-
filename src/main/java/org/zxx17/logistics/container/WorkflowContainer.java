@@ -49,4 +49,15 @@ public class WorkflowContainer {
         workflows -> workflows.getApplicationId().equals(appId)
             && workflows.getName().equals(name));
   }
+
+  /**
+   * 找出appId 和 name 相同的，但是排除自己.
+   */
+  public boolean getWorkflowsByAppIdAndNameExcludeSelf(
+      Long appId, String name, Long workflowId) {
+    return workflowsMap.values().stream().anyMatch(
+        workflows -> workflows.getApplicationId().equals(appId)
+            && workflows.getName().equals(name)
+            && !workflows.getId().equals(workflowId));
+  }
 }

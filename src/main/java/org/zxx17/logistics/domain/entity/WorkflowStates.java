@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 业务流程状态表(WorkflowStates)实体类.
  *
- * @author makejava
+ * @author Xinxuan Zhuo
  * @since 2024-06-11 20:29:28
  */
 @Data

@@ -178,17 +178,19 @@ public class WorkflowManagerImpl implements WorkflowManager {
       response.setReason(ResultEnum.PROCESS_ID_NOT_FOUND.getMessage());
       return Result.response(response, "流程删除失败", ResultEnum.PROCESS_ID_NOT_FOUND);
     }
+    log.info("工作流存在性校验通过");
     // 工作流进行中不能删除
     try {
       StateMachine<LogisticsStatusEnum, LogisticsStatusEnum> curInstanceStateMachine
           = stateMachineMemoryPersisted.restore(logisticsStateMachine, String.valueOf(workflowId));
       LogisticsStatusEnum curInstanceState = curInstanceStateMachine.getState().getId();
       log.error("===del当前工作流状态为:{}, id是{}", curInstanceState, workflowId);
-      if (curInstanceState != null) {
+      if (curInstanceState != null && curInstanceState != LogisticsStatusEnum.PENDING) {
         ErrorResponse response = new ErrorResponse();
         response.setReason(ResultEnum.PROCESS_IN_PROGRESS.getMessage());
         return Result.response(response, "流程删除失败", ResultEnum.PROCESS_IN_PROGRESS);
       } else {
+        log.info("工作流是否进行中校验通过");
         workflowContainer.deleteById(workflowId);
         workflowEventContainer.bachDeleteByWorkflowId(workflowId);
         workflowStatesContainer.bachDeleteByWorkflowId(workflowId);
@@ -213,6 +215,16 @@ public class WorkflowManagerImpl implements WorkflowManager {
       ErrorResponse response = new ErrorResponse();
       response.setReason(ResultEnum.PROCESS_ID_NOT_FOUND.getMessage());
       return Result.response(response, "流程更新失败", ResultEnum.PROCESS_ID_NOT_FOUND);
+    }
+    // 不能把名字更新成已存在的工作流，名字和id是唯一的
+    if (workflowContainer.getWorkflowsByAppIdAndNameExcludeSelf(
+        workflows.getApplicationId(),
+        request.getName(),
+        request.getId())
+    ) {
+      ErrorResponse response = new ErrorResponse();
+      response.setReason(ResultEnum.INPUT_PARAMETER_ERROR.getMessage());
+      return Result.response(response, "流程更新失败", ResultEnum.INPUT_PARAMETER_ERROR);
     }
     // 工作流进行中不能更新
     try {
@@ -331,7 +343,7 @@ public class WorkflowManagerImpl implements WorkflowManager {
         return Objects.equals(1, o);
       }
     }
-    // TODO 测试用例他执行了auto，但是揽收变成待支付我觉得是需要自动转变的（或者说到付？题目没体现），所以需要写上面的代码
+    // TODO 测试用例执行了auto，但是揽收变成待支付我觉得是需要自动转变的，所以写了上面的代码
     // 已取消 -> 已完成
     if (prevAction.equals(LogisticsEventEnum.CANCEL.name())) {
       return true;

@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 业务流程实例表(WorkflowInstances)实体类 TODO 既然没有持久化到数据库，那么这个实例目前没什么用.
  *
- * @author makejava
+ * @author Xinxuan Zhuo
  * @since 2024-06-11 20:29:28
  */
 @Data
