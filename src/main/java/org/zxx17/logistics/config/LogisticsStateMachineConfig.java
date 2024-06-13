@@ -127,11 +127,11 @@ public class LogisticsStateMachineConfig
         // 派送中 -> 已拒收
         .and().withExternal().source(LogisticsStatusEnum.DELIVERY)
         .target(LogisticsStatusEnum.REFUSED)
-        .event(LogisticsEventEnum.DELIVERY)
+        .event(LogisticsEventEnum.CANCEL)
         // 派送中 -> 异常件
         .and().withExternal().source(LogisticsStatusEnum.DELIVERY)
         .target(LogisticsStatusEnum.EXCEPTION)
-        .event(LogisticsEventEnum.DELIVERY)
+        .event(LogisticsEventEnum.EXCEPTION)
         // 待揽收 -> 已取消
         .and().withExternal().source(LogisticsStatusEnum.PENDING)
         .target(LogisticsStatusEnum.CANCELLED)

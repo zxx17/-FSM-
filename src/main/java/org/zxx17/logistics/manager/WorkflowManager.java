@@ -16,7 +16,7 @@ import org.zxx17.logistics.controller.response.WorkFlowPageQueryResponse;
  */
 public interface WorkflowManager {
 
-  Result<CommonResponse> createWorkflow(WorkflowCreateRequest request);
+  Result<?> createWorkflow(WorkflowCreateRequest request);
 
   Result<WorkFlowPageQueryResponse> queryWorkflowList(WorkflowPageQueryRequest request);
 

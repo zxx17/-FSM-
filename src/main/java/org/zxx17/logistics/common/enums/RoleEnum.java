@@ -12,7 +12,8 @@ public enum RoleEnum {
   SENDER("寄件人"),
   TRANSITER("转运员"),
   DRIVER("司机"),
-  RECIPIENT("收件人");
+  RECIPIENT("收件人"),
+  AUTO("自动执行");
 
   private String description;
 

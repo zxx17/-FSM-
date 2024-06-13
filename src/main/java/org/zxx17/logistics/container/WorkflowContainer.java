@@ -40,4 +40,13 @@ public class WorkflowContainer {
 
 
   }
+
+  /**
+   * 根据 appId 和 name 查询.
+   */
+  public boolean getWorkflowsByAppIdAndName(Long appId, String name) {
+    return workflowsMap.values().stream().anyMatch(
+        workflows -> workflows.getApplicationId().equals(appId)
+            && workflows.getName().equals(name));
+  }
 }

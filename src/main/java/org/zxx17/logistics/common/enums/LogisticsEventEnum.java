@@ -1,5 +1,7 @@
 package org.zxx17.logistics.common.enums;
 
+import lombok.Getter;
+
 /**
  * .
  *
@@ -13,7 +15,9 @@ public enum LogisticsEventEnum {
   SHIP("发货"),
   CANCEL("取消"),
   AUTO("自动执行"),
-  DELIVERY("派送");
+  DELIVERY("派送"),
+
+  EXCEPTION("异常");
 
   private final String description;
 

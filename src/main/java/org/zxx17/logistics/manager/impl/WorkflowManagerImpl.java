@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.zxx17.logistics.common.enums.LogisticsEventEnum;
 import org.zxx17.logistics.common.enums.LogisticsStatusEnum;
 import org.zxx17.logistics.common.enums.ResultEnum;
+import org.zxx17.logistics.common.enums.RoleEnum;
 import org.zxx17.logistics.common.result.Result;
 import org.zxx17.logistics.common.util.id.SnowFlake;
 import org.zxx17.logistics.common.util.id.SnowFlakeFactory;
@@ -64,7 +64,14 @@ public class WorkflowManagerImpl implements WorkflowManager {
       stateMachineMemoryPersisted;
 
   @Override
-  public Result<CommonResponse> createWorkflow(WorkflowCreateRequest request) {
+  public Result<?> createWorkflow(WorkflowCreateRequest request) {
+    // 如果appID和name都存在，说明重复创建
+    if (workflowContainer.getWorkflowsByAppIdAndName(request.getAppId(), request.getName())) {
+      ErrorResponse errorResponse = new ErrorResponse();
+      errorResponse.setReason(ResultEnum.INPUT_PARAMETER_ERROR.getMessage());
+      return Result.response(errorResponse, "创建失败", ResultEnum.INPUT_PARAMETER_ERROR);
+    }
+
     SnowFlake snowFlake = SnowFlakeFactory.getSnowFlake();
     long workflowId = snowFlake.nextId();
 
@@ -176,10 +183,18 @@ public class WorkflowManagerImpl implements WorkflowManager {
       StateMachine<LogisticsStatusEnum, LogisticsStatusEnum> curInstanceStateMachine
           = stateMachineMemoryPersisted.restore(logisticsStateMachine, String.valueOf(workflowId));
       LogisticsStatusEnum curInstanceState = curInstanceStateMachine.getState().getId();
-      if (!curInstanceState.equals(LogisticsStatusEnum.PENDING)) {
+      log.error("===del当前工作流状态为:{}, id是{}", curInstanceState, workflowId);
+      if (curInstanceState != null) {
         ErrorResponse response = new ErrorResponse();
         response.setReason(ResultEnum.PROCESS_IN_PROGRESS.getMessage());
         return Result.response(response, "流程删除失败", ResultEnum.PROCESS_IN_PROGRESS);
+      } else {
+        workflowContainer.deleteById(workflowId);
+        workflowEventContainer.bachDeleteByWorkflowId(workflowId);
+        workflowStatesContainer.bachDeleteByWorkflowId(workflowId);
+        CommonResponse commonResponse = new CommonResponse();
+        commonResponse.setId(workflowId);
+        return Result.response(commonResponse, "流程删除成功", ResultEnum.SUCCESS);
       }
     } catch (Exception e) {
       log.error("FSM状态机工作流程状态查询失败:{}", e.getMessage());
@@ -187,12 +202,6 @@ public class WorkflowManagerImpl implements WorkflowManager {
       response.setReason(ResultEnum.SYSTEM_EXCEPTION.getMessage());
       return Result.response(response, "流程删除失败", ResultEnum.SYSTEM_EXCEPTION);
     }
-    workflowContainer.deleteById(workflowId);
-    workflowEventContainer.bachDeleteByWorkflowId(workflowId);
-    workflowStatesContainer.bachDeleteByWorkflowId(workflowId);
-    CommonResponse commonResponse = new CommonResponse();
-    commonResponse.setId(workflowId);
-    return Result.response(commonResponse, "流程删除成功", ResultEnum.SUCCESS);
   }
 
   @Override
@@ -237,19 +246,21 @@ public class WorkflowManagerImpl implements WorkflowManager {
 
   @Override
   public synchronized int sendEvent(Long workflowId, String action, String role) {
-    // TODO 校验workflowId存不存在
-
     log.info("开始执行状态机，事件{}，角色{}", action, role);
     boolean result = false;
-
     try {
       //启动状态机
       logisticsStateMachine.start();
       //尝试恢复状态机状态
       StateMachine<LogisticsStatusEnum, LogisticsStatusEnum> curInstanceStateMachine
           = stateMachineMemoryPersisted.restore(logisticsStateMachine, String.valueOf(workflowId));
-      LogisticsStatusEnum curInstanceState = curInstanceStateMachine.getState().getId();
-      // TODO 角色权限校验 TODO 非法状态轮转需要直接驳回
+      log.info("当前状态机状态>>>>{}, Action==={}，角色===={}",
+          curInstanceStateMachine.getState().getId(), action, role);
+      boolean roleAuthPass = checkRole(LogisticsEventEnum.valueOf(action), role);
+      if (!roleAuthPass) {
+        log.warn("角色权限校验失败,Action==={}，角色===={}", action, role);
+        return 2;
+      }
 
       Message message = MessageBuilder.withPayload(LogisticsEventEnum.valueOf(action))
           .setHeader("workflowId", workflowId).build();
@@ -265,15 +276,16 @@ public class WorkflowManagerImpl implements WorkflowManager {
       log.info("获取到监听的结果信息>>>>{}", o);
       //操作完成之后,删除本次对应的key信息
       logisticsStateMachine.getExtendedState().getVariables().remove(action + workflowId);
-      //如果事务执行成功，则持久化状态机
-      if (Objects.equals(1, Integer.valueOf(o))) {
+      // 有些需要自动转换，执行AUTO操作
+      LogisticsStatusEnum actionedInstanceState = curInstanceStateMachine.getState().getId();
+      boolean sendEventAutoFlag = sendEventAuto(workflowId, action, actionedInstanceState);
+      //持久化状态机
+      if (Objects.equals(1, o) && sendEventAutoFlag) {
         //持久化状态机状态 nb
         stateMachineMemoryPersisted.persist(logisticsStateMachine, String.valueOf(workflowId));
-      } else {
-        // 执行异常
-        return -1;
+        LogisticsStatusEnum finalState = curInstanceStateMachine.getState().getId();
+        log.info("执行当前操作：==>{}完毕，最终：{}，状态是：{}", message, workflowId, finalState);
       }
-
     } catch (Exception e) {
       log.error("FSM状态机工作流程状态流转失败:{}", e.getMessage());
     } finally {
@@ -281,5 +293,65 @@ public class WorkflowManagerImpl implements WorkflowManager {
     }
     return 1;
   }
+
+  private boolean checkRole(LogisticsEventEnum action, String role) {
+    switch (action) {
+      case COLLECT:
+      case DELIVERY:
+        return role.equals(RoleEnum.POSTMAN.name())
+            || role.equals(RoleEnum.RECIPIENT.name());
+      case PAY:
+      case CANCEL:
+        return role.equals(RoleEnum.SENDER.name());
+      case SHIP:
+        return role.equals(RoleEnum.TRANSITER.name())
+            || role.equals(RoleEnum.DRIVER.name());
+      case AUTO:
+        return role.equals(RoleEnum.AUTO.name());
+      case EXCEPTION:
+        return role.equals(RoleEnum.POSTMAN.name());
+      default:
+        return false;
+    }
+  }
+
+  private boolean sendEventAuto(Long workflowId, String prevAction,
+      LogisticsStatusEnum actionedInstanceState) {
+    // 揽收完自动变成待支付
+    if (prevAction.equals(LogisticsEventEnum.COLLECT.name())) {
+      if (actionedInstanceState.equals(LogisticsStatusEnum.COLLECTED)) {
+        logisticsStateMachine.start();
+        Message message = MessageBuilder.withPayload(LogisticsEventEnum.AUTO)
+            .setHeader("workflowId", workflowId).build();
+        log.info("发送AUTO事件，消息>>>>{}", message);
+        logisticsStateMachine.sendEvent(message);
+        Integer o = (Integer) logisticsStateMachine.getExtendedState().getVariables()
+            .get(LogisticsEventEnum.AUTO.name() + workflowId);
+        log.info("获取到监听的AUTO结果信息>>>>{}", o);
+        return Objects.equals(1, o);
+      }
+    }
+    // TODO 测试用例他执行了auto，但是揽收变成待支付我觉得是需要自动转变的（或者说到付？题目没体现），所以需要写上面的代码
+    // 已取消 -> 已完成
+    if (prevAction.equals(LogisticsEventEnum.CANCEL.name())) {
+      return true;
+    }
+
+    // 已拒收 -> 已完成
+    if (prevAction.equals(LogisticsEventEnum.CANCEL.name())) {
+      // 判断派送是不是被拒收了或者异常件
+      return true;
+    }
+
+    // 异常件 -> 已完成
+    if (prevAction.equals(LogisticsEventEnum.EXCEPTION.name())) {
+      return true;
+    }
+
+    // 其他情况直接返回true
+    return true;
+
+  }
+
 
 }
