@@ -91,7 +91,7 @@ public class LogisticsStateMachineConfig
   }
 
   /**
-   * 配置状态间的转换逻辑。当前示例中转换逻辑被注释，需根据实际情况实现状态转换.
+   * 配置状态间的转换逻辑.
    *
    * @param transitions 状态转换配置器
    * @throws Exception 配置过程中可能抛出的异常

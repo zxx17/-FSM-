@@ -35,7 +35,7 @@ public class EventListenerResultAspect {
   public Object eventListenerResult(ProceedingJoinPoint pjp) throws Throwable {
     //获取参数
     Object[] args = pjp.getArgs();
-    log.info("参数args:{}", args);
+    log.info("执行流程流转方法->参数args:{}", args);
     Message message = (Message) args[0];
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     //获取方法
@@ -47,11 +47,12 @@ public class EventListenerResultAspect {
     Object returnVal = null;
     try {
       //执行方法
-      log.info("执行代理方法");
+      log.info("执行监听器代理方法");
+      // 执行 LogisticsStateMachineListener
       returnVal = pjp.proceed();
       //如果业务执行正常，则保存信息
       //成功 则为1
-      log.info("代理方法执行完毕。保存ExtendedState状态为正常。");
+      log.info(">>>>>>>监听器代理方法执行完毕。保存ExtendedState状态为正常<<<<<<<");
       logisticsStateMachine.getExtendedState().getVariables().put(key + workflowId, 1);
     } catch (Throwable e) {
       log.error("e:{}", e.getMessage());
@@ -62,4 +63,5 @@ public class EventListenerResultAspect {
     }
     return returnVal;
   }
+
 }
