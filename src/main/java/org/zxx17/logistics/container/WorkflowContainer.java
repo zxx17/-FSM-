@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import org.zxx17.logistics.common.enums.LogisticsStatusEnum;
 import org.zxx17.logistics.domain.entity.Workflows;
 
 /**
@@ -59,5 +60,13 @@ public class WorkflowContainer {
         workflows -> workflows.getApplicationId().equals(appId)
             && workflows.getName().equals(name)
             && !workflows.getId().equals(workflowId));
+  }
+
+  /**
+   * 更新状态.
+   * @param workflowId 流程id
+   * @param state 新状态
+   */
+  public void updateState(Long workflowId, LogisticsStatusEnum state) {
   }
 }

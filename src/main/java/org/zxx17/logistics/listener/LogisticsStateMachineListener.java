@@ -1,5 +1,6 @@
 package org.zxx17.logistics.listener;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.annotation.OnTransition;
@@ -7,6 +8,8 @@ import org.springframework.statemachine.annotation.WithStateMachine;
 import org.springframework.stereotype.Component;
 import org.zxx17.logistics.aspect.EventListenerResult;
 import org.zxx17.logistics.common.enums.LogisticsEventEnum;
+import org.zxx17.logistics.common.enums.LogisticsStatusEnum;
+import org.zxx17.logistics.container.WorkflowContainer;
 
 /**
  * .
@@ -19,8 +22,10 @@ import org.zxx17.logistics.common.enums.LogisticsEventEnum;
 @Component
 @Slf4j
 @WithStateMachine(name = "logisticsStateMachine")
+@RequiredArgsConstructor
 public class LogisticsStateMachineListener {
 
+  private final WorkflowContainer workflowContainer;
 
   /**
    * COLLECT待揽收--->揽收.
@@ -32,6 +37,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) messageIn.getHeaders().get("workflowId");
     log.info("COLLECT待揽收--->揽收.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("COLLECTED"));
   }
 
   /**
@@ -44,7 +50,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) messageIn.getHeaders().get("workflowId");
     log.info("AUTO揽收--->待支付.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("PAYING"));
   }
 
   /**
@@ -57,7 +63,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("PAY待支付--->已支付.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("PAID"));
   }
 
   /**
@@ -70,7 +76,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("待支付 --> 已取消.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("CANCELLED"));
   }
 
   /**
@@ -83,7 +89,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("AUTO已取消 --> 已完成.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("COMPLETED"));
   }
 
 
@@ -97,7 +103,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("SHIP已支付--->运输中.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("TRANSITING"));
   }
 
 
@@ -111,7 +117,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("DELIVERY运输中--->派送中.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("DELIVERY"));
   }
 
   /**
@@ -124,7 +130,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("DELIVERY派送中--->已签收.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("DELIVERED"));
   }
 
   /**
@@ -137,7 +143,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("DELIVERY派送中--->已拒收.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("REFUSED"));
   }
 
   /**
@@ -150,7 +156,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("DELIVERY派送中--->异常件.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("EXCEPTION"));
   }
 
   /**
@@ -163,7 +169,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info(" AUTO 异常件--->已完成.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("COMPLETED"));
   }
 
   /**
@@ -176,7 +182,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("AUTO 已签收--->已完成.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("COMPLETED"));
   }
 
   /**
@@ -189,7 +195,7 @@ public class LogisticsStateMachineListener {
     Long workflowId = (Long) message.getHeaders().get("workflowId");
     log.info("AUTO 已拒收--->已完成.{}===================", workflowId);
     // 更新对应workflow实例状态 相当于入库操作 .....
-
+    workflowContainer.updateState(workflowId, LogisticsStatusEnum.valueOf("COMPLETED"));
   }
 
 
